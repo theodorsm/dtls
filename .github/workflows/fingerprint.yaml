@@ -30,6 +30,8 @@ jobs:
     - uses: actions/setup-node@v3
     - run: npm install
       working-directory: .github/workflows/fingerprinting
+    - run: BROWSER=${{matrix.browser}} BVER=${{matrix.bver}} ./node_modules/travis-multirunner/setup.sh
+      working-directory: .github/workflows/fingerprinting
     - run: sudo rm /usr/bin/chromedriver /usr/bin/geckodriver # remove preinstalled github chromedriver/geckodriver from $PATH
     - name: Get browser version
       id: "browser"
