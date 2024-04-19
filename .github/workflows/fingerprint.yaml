@@ -21,23 +21,33 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        browser: [chrome, firefox]
+        browser: [firefox, chrome]
         bver: ['stable']
     steps:
     - uses: actions/checkout@v3
+
     - name: Install tshark
       run: sudo apt install -y tshark
+
     - uses: actions/setup-node@v3
+
     - run: npm install
       working-directory: .github/workflows/fingerprinting
-    - run: BROWSER=${{matrix.browser}} BVER=${{matrix.bver}} ./node_modules/travis-multirunner/setup.sh
+
+    - name: Install browser version
+      run: BROWSER=${{matrix.browser}} BVER=${{matrix.bver}} ./node_modules/travis-multirunner/setup.sh
       working-directory: .github/workflows/fingerprinting
-    - run: sudo rm /usr/bin/chromedriver /usr/bin/geckodriver # remove preinstalled github chromedriver/geckodriver from $PATH
+
+    - name: Remove preinstalled github chromedriver/geckodriver from $PATH
+      run: sudo rm /usr/bin/chromedriver /usr/bin/geckodriver
+
     - run: Xvfb :99 &
+
     - name: Get browser version
       id: "browser"
       run: echo "version=$(./browsers/bin/${{matrix.browser}}-${{matrix.bver}} --version | sed 's/ /_/g')" >> $GITHUB_OUTPUT
       working-directory: .github/workflows/fingerprinting
+
     - name: Create directory for pcaps
       run: |
         mkdir ./captures/
@@ -46,14 +56,18 @@ jobs:
         ls -lga ./captures
     - name: Start tshark capture
       run: sudo tshark -i any -w ./captures/full-capture-${{matrix.browser}}-${{steps.browser.outputs.version}}.pcap -f "udp" &
+
     - name: Run webrtc applications with jest/selenium
       run: BROWSER_A=${{matrix.browser}} BROWSER_B=${{matrix.browser}} BVER=${{matrix.bver}} DISPLAY=:99.0 node_modules/.bin/jest --retries=3 test/interop
       working-directory: .github/workflows/fingerprinting
+
     - name: Kill tshark capture
       run: sudo killall tshark 1> /dev/null 2> /dev/null
       continue-on-error: true
+
     - name: Filter DTLS handshake in pcap
       run: sudo tshark -r ./captures/full-capture-${{matrix.browser}}-${{steps.browser.outputs.version}}.pcap -Y "dtls.handshake" -w ./captures/capture-${{matrix.browser}}-${{steps.browser.outputs.version}}.pcap
+
     - name: Archive pcap
       uses: actions/upload-artifact@v4
       with:
@@ -69,32 +83,55 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.ref }}
-      - run: |
+
+      - name: Create fingerprint directory
+        run: |
           mkdir -p ./fingerprints
           mkdir -p ${{ runner.temp }}/fingerprints
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: ${{ runner.temp }}/fingerprints
           pattern: fingerprint-pcap-*
           merge-multiple: true
-      - run: sudo apt install libpcap-dev
+
+      - name: Install libpcap
+        run: sudo apt install libpcap-dev
+
       - name: Setup go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.22.x'
-      - run: go get .
+          go-version: 'stable'
+
+      - name: Run pcap fingerprint parser
+        run: |
+          go get .
+          go run main.go ${{ runner.temp }}/fingerprints
         working-directory: .github/workflows/fingerprinting
-      - run: go run main.go ${{ runner.temp }}/fingerprints
-        working-directory: .github/workflows/fingerprinting
-      - run: mv ${{ runner.temp }}/fingerprints/* ./fingerprints/
-      - run: ls -R fingerprints
-      - name: Run linting
-        uses: pion/.goassets/.github/workflows/lint.reusable.yml@master
+
+      - name: Move new fingerprints to repo
+        run: |
+          mv ${{ runner.temp }}/fingerprints/* ./fingerprints/
+          ls -R fingerprints
+
+      - name: Run pre lint hook
+        if: always()
+        run: |
+          if [ -f .github/.ci.conf ]; then . .github/.ci.conf; fi
+          if [ -n "${PRE_LINT_HOOK}" ]; then ${PRE_LINT_HOOK}; fi
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: v1.56.2
+          args: $GOLANGCI_LINT_EXRA_ARGS
+
       - name: Run E2E tests
         run: |
           docker build -t pion-dtls-e2e -f e2e/Dockerfile .
           docker run -i --rm pion-dtls-e2e
+
       - name: Commit fingerprints
         run: |
           git config user.name github-actions
