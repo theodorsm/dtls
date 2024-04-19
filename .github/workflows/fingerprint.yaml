@@ -81,7 +81,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0
           ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Create fingerprint directory
@@ -110,6 +109,9 @@ jobs:
           go run main.go ${{ runner.temp }}/fingerprints
         working-directory: .github/workflows/fingerprinting
 
+      - name: Run gofmt on fingerprints.go
+        run: gofmt -s -w ./pkg/mimicry/fingerprints.go
+
       - name: Move new fingerprints to repo
         run: |
           mv ${{ runner.temp }}/fingerprints/* ./fingerprints/
@@ -124,7 +126,9 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v4
         with:
-          version: v1.57.0
+          version: v1.56.2
+          skip-pkg-cache: true
+          skip-build-cache: true
           args: $GOLANGCI_LINT_EXRA_ARGS
 
       - name: Run E2E tests

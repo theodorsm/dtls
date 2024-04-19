@@ -41,10 +41,10 @@ func appendFingerprint(fingerprint string, version string) error {
 		line := fileScanner.Text()
 
 		if line == ")" {
-			fileStrings = append(fileStrings, fmt.Sprintf("\t%s ClientHelloFingerprint = \"%s\"", version, fingerprint))
+			fileStrings = append(fileStrings, fmt.Sprintf("	%s ClientHelloFingerprint = \"%s\" //nolint:revive,stylecheck", version, fingerprint))
 			fileStrings = append(fileStrings, line)
 		} else if line == "\t}" {
-			fileStrings = append(fileStrings, fmt.Sprintf("\t\t%s,", version))
+			fileStrings = append(fileStrings, fmt.Sprintf("		%s, //nolint:revive,stylecheck", version))
 			fileStrings = append(fileStrings, line)
 		} else if !strings.Contains(line, version) {
 			fileStrings = append(fileStrings, line)

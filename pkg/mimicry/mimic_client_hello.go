@@ -7,23 +7,25 @@ package mimicry
 import (
 	"encoding/hex"
 	"errors"
-	"fmt"
 
 	"github.com/pion/dtls/v2/pkg/protocol/handshake"
 )
 
 var errBufferTooSmall = errors.New("buffer is too small") //nolint:goerr113
 
+//nolint:revive
 type MimickedClientHello struct {
 	Random    handshake.Random
 	SessionID []byte
 	Cookie    []byte
 }
 
+//nolint:revive
 func (m MimickedClientHello) Type() handshake.Type {
 	return handshake.TypeClientHello
 }
 
+//nolint:revive
 func (m *MimickedClientHello) Marshal() ([]byte, error) {
 	var out []byte
 
@@ -35,7 +37,7 @@ func (m *MimickedClientHello) Marshal() ([]byte, error) {
 	fingerprint := fingerprints[0]
 	data, err := hex.DecodeString(string(fingerprint))
 	if err != nil {
-		err = errors.New(fmt.Sprintf("mimicry: failed to decode mimicry hexstring: %x", fingerprint))
+		err = errors.New("mimicry: failed to decode mimicry hexstring") //nolint:goerr113
 	}
 
 	if len(data) <= 2 {
@@ -85,4 +87,5 @@ func (m *MimickedClientHello) Marshal() ([]byte, error) {
 	return out, err
 }
 
+//nolint:revive
 func (m *MimickedClientHello) Unmarshal(data []byte) error { return nil }
