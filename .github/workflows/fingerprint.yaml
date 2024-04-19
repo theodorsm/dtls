@@ -45,7 +45,7 @@ jobs:
 
     - name: Get browser version
       id: "browser"
-      run: echo "version=$(./browsers/bin/${{matrix.browser}}-${{matrix.bver}} --version | sed 's/ /_/g')" >> $GITHUB_OUTPUT
+      run: echo "version=$(./browsers/bin/${{matrix.browser}}-${{matrix.bver}} --version | sed -e 's/ /_/g' -e 's/\./_/g' -e 's/\-/_/g')" >> $GITHUB_OUTPUT
       working-directory: .github/workflows/fingerprinting
 
     - name: Create directory for pcaps

@@ -79,7 +79,6 @@ func parsePcap(path string, filename string) error {
 	version := tmp[len(tmp)-1]
 	version = strings.Trim(version, ".pcap")
 	version = strings.Trim(version, "_")
-	version = strings.ReplaceAll(version, ".", "_")
 
 	handle, err := pcap.OpenOffline(path)
 	if err != nil {
