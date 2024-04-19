@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/pion/dtls/v2/pkg/crypto/elliptic"
+	"github.com/pion/dtls/v2/pkg/mimicry"
 	"github.com/pion/logging"
 )
 
@@ -198,6 +199,8 @@ type Config struct {
 	PaddingLengthGenerator func(uint) uint
 
 	MimicryEnabled bool
+
+	ClientHelloFingerprint mimicry.ClientHelloFingerprint
 }
 
 func defaultConnectContextMaker() (context.Context, func()) {
