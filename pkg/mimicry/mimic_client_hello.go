@@ -15,9 +15,10 @@ var errBufferTooSmall = errors.New("buffer is too small") //nolint:goerr113
 
 //nolint:revive
 type MimickedClientHello struct {
-	Random    handshake.Random
-	SessionID []byte
-	Cookie    []byte
+	ClientHelloFingerprint ClientHelloFingerprint
+	Random                 handshake.Random
+	SessionID              []byte
+	Cookie                 []byte
 }
 
 //nolint:revive
@@ -34,7 +35,13 @@ func (m *MimickedClientHello) Marshal() ([]byte, error) {
 	if len(fingerprints) < 1 {
 		return out, errors.New("no fingerprints available") //nolint:goerr113
 	}
-	fingerprint := fingerprints[0]
+
+	fingerprint := m.ClientHelloFingerprint
+
+	if string(fingerprint) == "" {
+		fingerprint = fingerprints[len(fingerprints)-1]
+	}
+
 	data, err := hex.DecodeString(string(fingerprint))
 	if err != nil {
 		err = errors.New("mimicry: failed to decode mimicry hexstring") //nolint:goerr113

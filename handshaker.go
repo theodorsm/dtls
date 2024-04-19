@@ -14,6 +14,7 @@ import (
 
 	"github.com/pion/dtls/v2/pkg/crypto/elliptic"
 	"github.com/pion/dtls/v2/pkg/crypto/signaturehash"
+	"github.com/pion/dtls/v2/pkg/mimicry"
 	"github.com/pion/dtls/v2/pkg/protocol/alert"
 	"github.com/pion/dtls/v2/pkg/protocol/handshake"
 	"github.com/pion/logging"
@@ -126,7 +127,8 @@ type handshakeConfig struct {
 
 	mu sync.Mutex
 
-	mimicryEnabled bool
+	mimicryEnabled         bool
+	clientHelloFingerprint mimicry.ClientHelloFingerprint
 }
 
 type flightConn interface {

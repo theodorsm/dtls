@@ -297,9 +297,10 @@ func flight3Generate(_ flightConn, state *State, _ *handshakeCache, cfg *handsha
 					},
 					Content: &handshake.Handshake{
 						Message: &mimicry.MimickedClientHello{
-							Random:    state.localRandom,
-							SessionID: state.SessionID,
-							Cookie:    state.cookie,
+							ClientHelloFingerprint: cfg.clientHelloFingerprint,
+							Random:                 state.localRandom,
+							SessionID:              state.SessionID,
+							Cookie:                 state.cookie,
 						},
 					},
 				},
