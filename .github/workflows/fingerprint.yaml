@@ -48,7 +48,7 @@ jobs:
     - name: Start tshark capture
       run: sudo tshark -i any -w ./captures/full-capture-${{matrix.browser}}-${{steps.browser.outputs.version}}.pcap -f "udp" &
     - name: Run webrtc applications with jest/selenium
-    - run: BROWSER_A=${{matrix.browser}} BROWSER_B=${{matrix.browser}} BVER=${{matrix.bver}} DISPLAY=:99.0 node_modules/.bin/jest --retries=3 test/interop
+      run: BROWSER_A=${{matrix.browser}} BROWSER_B=${{matrix.browser}} BVER=${{matrix.bver}} DISPLAY=:99.0 node_modules/.bin/jest --retries=3 test/interop
       working-directory: .github/workflows/fingerprinting
     - name: Kill tshark capture
       run: sudo killall tshark 1> /dev/null 2> /dev/null
