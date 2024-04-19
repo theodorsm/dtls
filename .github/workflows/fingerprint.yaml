@@ -89,7 +89,14 @@ jobs:
         working-directory: .github/workflows/fingerprinting
       - run: mv ${{ runner.temp }}/fingerprints/* ./fingerprints/
       - run: ls -R fingerprints
-      - run: |
+      - name: Run linting
+        uses: pion/.goassets/.github/workflows/lint.reusable.yml@master
+      - name: Run E2E tests
+        run: |
+          docker build -t pion-dtls-e2e -f e2e/Dockerfile .
+          docker run -i --rm pion-dtls-e2e
+      - name: Commit fingerprints
+        run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add ./fingerprints
