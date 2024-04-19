@@ -71,7 +71,7 @@ jobs:
     - name: Archive pcap
       uses: actions/upload-artifact@v4
       with:
-        name: fingerprint-pcap-${{matrix.browser}}-${{steps.browser.outputs.version}}
+        name: fingerprint-pcap-${{matrix.browser}}-${{steps.browser.outputs.version}}.pcap
         path: ./captures/capture-${{matrix.browser}}-${{steps.browser.outputs.version}}.pcap
 
   commit-fingerprints:
@@ -124,7 +124,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v4
         with:
-          version: v1.56.2
+          version: v1.57.0
           args: $GOLANGCI_LINT_EXRA_ARGS
 
       - name: Run E2E tests
