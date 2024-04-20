@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"errors"
 
+	"github.com/pion/dtls/v2/pkg/protocol/extension"
 	"github.com/pion/dtls/v2/pkg/protocol/handshake"
 )
 
@@ -15,10 +16,12 @@ var errBufferTooSmall = errors.New("buffer is too small") //nolint:goerr113
 
 //nolint:revive
 type MimickedClientHello struct {
-	ClientHelloFingerprint ClientHelloFingerprint
+	clientHelloFingerprint ClientHelloFingerprint
 	Random                 handshake.Random
 	SessionID              []byte
 	Cookie                 []byte
+	Extensions             []extension.Extension
+	SRTPProtectionProfiles []extension.SRTPProtectionProfile
 }
 
 //nolint:revive
@@ -26,20 +29,45 @@ func (m MimickedClientHello) Type() handshake.Type {
 	return handshake.TypeClientHello
 }
 
+func (m *MimickedClientHello) LoadFingerprint(fingerprint ClientHelloFingerprint) error {
+	m.clientHelloFingerprint = fingerprint
+	clientHello := handshake.MessageClientHello{}
+	data, err := hex.DecodeString(string(m.clientHelloFingerprint))
+	if err != nil {
+		return errors.New("mimicry: failed to decode mimicry hexstring") //nolint:goerr113
+	}
+	clientHello.Unmarshal(data)
+	m.Extensions = clientHello.Extensions
+	for _, ext := range m.Extensions {
+		if ext.TypeValue() == extension.UseSRTPTypeValue {
+			srtp := extension.UseSRTP{}
+			buf, err := ext.Marshal()
+			if err != nil {
+				return err
+			}
+			err = srtp.Unmarshal(buf)
+			if err != nil {
+				return err
+			}
+			m.SRTPProtectionProfiles = srtp.ProtectionProfiles
+		}
+	}
+	return nil
+}
+
 //nolint:revive
 func (m *MimickedClientHello) Marshal() ([]byte, error) {
 	var out []byte
 
-	fingerprints := getClientHelloFingerprints()
-
-	if len(fingerprints) < 1 {
-		return out, errors.New("no fingerprints available") //nolint:goerr113
-	}
-
-	fingerprint := m.ClientHelloFingerprint
+	fingerprint := m.clientHelloFingerprint
 
 	if string(fingerprint) == "" {
+		fingerprints := getClientHelloFingerprints()
+		if len(fingerprints) < 1 {
+			return out, errors.New("no fingerprints available") //nolint:goerr113
+		}
 		fingerprint = fingerprints[len(fingerprints)-1]
+		m.LoadFingerprint(fingerprint)
 	}
 
 	data, err := hex.DecodeString(string(fingerprint))

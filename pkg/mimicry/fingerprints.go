@@ -6,7 +6,7 @@ package mimicry
 //nolint:revive
 type ClientHelloFingerprint string
 
-// These fingerprints are added automatically generated and added by the 'fingerprint' workflow
+// These fingerprints are sample fingerprints, more can by using the `fingerprints` module at https://github.com/theodorsm/dtls-webrtc-fingerprint
 // The first byte should correspond to the DTLS version in a handshake message
 const (
 	Google_Chrome_124_0_6367_60_unknown ClientHelloFingerprint = "fefda20ee7841620b36a9c1736ea6846255d7da83e9271816b0cc85b7f948951581700000016c02bc02fcca9cca8c009c013c00ac014009c002f00350100004400170000ff01000100000a00080006001d00170018000b0002010000230000000d00140012040308040401050308050501080606010201000e0009000600010008000700"                                                                 //nolint:revive,stylecheck

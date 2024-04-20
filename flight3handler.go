@@ -289,6 +289,16 @@ func flight3Generate(_ flightConn, state *State, _ *handshakeCache, cfg *handsha
 	}
 
 	if cfg.mimicryEnabled {
+		msg := &mimicry.MimickedClientHello{
+			Random:    state.localRandom,
+			SessionID: state.SessionID,
+			Cookie:    state.cookie,
+		}
+
+		msg.LoadFingerprint(cfg.clientHelloFingerprint)
+
+		cfg.localSRTPProtectionProfiles = msg.SRTPProtectionProfiles
+
 		return []*packet{
 			{
 				record: &recordlayer.RecordLayer{
@@ -296,12 +306,7 @@ func flight3Generate(_ flightConn, state *State, _ *handshakeCache, cfg *handsha
 						Version: protocol.Version1_2,
 					},
 					Content: &handshake.Handshake{
-						Message: &mimicry.MimickedClientHello{
-							ClientHelloFingerprint: cfg.clientHelloFingerprint,
-							Random:                 state.localRandom,
-							SessionID:              state.SessionID,
-							Cookie:                 state.cookie,
-						},
+						Message: msg,
 					},
 				},
 			},
