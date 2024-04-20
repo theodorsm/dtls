@@ -585,17 +585,24 @@ func testPionE2ESimpleMimicry(t *testing.T, server, client func(*comm), opts ...
 			t.Fatal(err)
 		}
 
-		cfg := &dtls.Config{
+		client_cfg := &dtls.Config{
+			Certificates:       []tls.Certificate{cert},
+			MimicryEnabled:     true,
+			InsecureSkipVerify: true,
+		}
+
+		server_cfg := &dtls.Config{
 			Certificates:           []tls.Certificate{cert},
 			SRTPProtectionProfiles: []dtls.SRTPProtectionProfile{dtls.SRTP_AES128_CM_HMAC_SHA1_80, dtls.SRTP_AES128_CM_HMAC_SHA1_32, dtls.SRTP_AEAD_AES_128_GCM, dtls.SRTP_AEAD_AES_256_GCM},
-			MimicryEnabled:         true,
 			InsecureSkipVerify:     true,
 		}
+
 		for _, o := range opts {
-			o(cfg)
+			o(client_cfg)
+			o(server_cfg)
 		}
 		serverPort := randomPort(t)
-		comm := newComm(ctx, cfg, cfg, serverPort, server, client)
+		comm := newComm(ctx, client_cfg, server_cfg, serverPort, server, client)
 		defer comm.cleanup(t)
 		comm.assert(t)
 	})
