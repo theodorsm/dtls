@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/pion/dtls/v2/pkg/crypto/elliptic"
-	"github.com/pion/dtls/v2/pkg/mimicry"
+	"github.com/pion/dtls/v2/pkg/protocol/handshake"
 	"github.com/pion/logging"
 )
 
@@ -198,9 +198,8 @@ type Config struct {
 	// https://datatracker.ietf.org/doc/html/rfc9146#section-4
 	PaddingLengthGenerator func(uint) uint
 
-	MimicryEnabled bool
-
-	ClientHelloFingerprint mimicry.ClientHelloFingerprint
+	// Random, SessionID, Cookie
+	ClientHelloMessageHook func(handshake.Random, []byte, []byte) handshake.Message
 }
 
 func defaultConnectContextMaker() (context.Context, func()) {
