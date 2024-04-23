@@ -198,6 +198,12 @@ type Config struct {
 	// https://datatracker.ietf.org/doc/html/rfc9146#section-4
 	PaddingLengthGenerator func(uint) uint
 
+	// ClientHelloMessageHook, if not nil, is called when a Client Hello message is sent
+	// from a client. The returned handshake message replaces the original message. This
+	// hook can be used for testing invalid messages, mimicking other implementations or
+	// randomizing fields, which is valuable for applications that need
+	// censorship-resistance by making fingerprinting more difficult.
+	//
 	// Random, SessionID, Cookie
 	ClientHelloMessageHook func(handshake.Random, []byte, []byte) handshake.Message
 }
