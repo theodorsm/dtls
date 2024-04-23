@@ -24,6 +24,8 @@ import (
 
 	"github.com/pion/dtls/v2"
 	"github.com/pion/dtls/v2/pkg/crypto/selfsign"
+	"github.com/pion/dtls/v2/pkg/protocol"
+	"github.com/pion/dtls/v2/pkg/protocol/handshake"
 	"github.com/pion/transport/v3/test"
 )
 
@@ -569,6 +571,46 @@ func testPionE2ESimpleRSAClientCert(t *testing.T, server, client func(*comm), op
 	comm.assert(t)
 }
 
+func testPionE2ESimpleClientHook(t *testing.T, server, client func(*comm), opts ...dtlsConfOpts) {
+	lim := test.TimeOut(time.Second * 30)
+	defer lim.Stop()
+
+	report := test.CheckRoutines(t)
+	defer report()
+
+	t.Run("ClientHello hook", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+
+		cert, err := selfsign.GenerateSelfSignedWithDNS("localhost")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		cfg := &dtls.Config{
+			Certificates: []tls.Certificate{cert},
+			CipherSuites: []dtls.CipherSuiteID{dtls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256},
+			ClientHelloMessageHook: func(r handshake.Random, s []byte, c []byte) handshake.Message {
+				return &handshake.MessageClientHello{
+					Version:        protocol.Version{Major: 0xFE, Minor: 0xFD},
+					Random:         r,
+					SessionID:      s,
+					Cookie:         c,
+					CipherSuiteIDs: []uint16{uint16(dtls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256)}}
+			},
+			InsecureSkipVerify: true,
+		}
+
+		for _, o := range opts {
+			o(cfg)
+		}
+		serverPort := randomPort(t)
+		comm := newComm(ctx, cfg, cfg, serverPort, server, client)
+		defer comm.cleanup(t)
+		comm.assert(t)
+	})
+}
+
 func TestPionE2ESimple(t *testing.T) {
 	testPionE2ESimple(t, serverPion, clientPion)
 }
@@ -623,4 +665,8 @@ func TestPionE2ESimpleECDSAClientCertCID(t *testing.T) {
 
 func TestPionE2ESimpleRSAClientCertCID(t *testing.T) {
 	testPionE2ESimpleRSAClientCert(t, serverPion, clientPion, withConnectionIDGenerator(dtls.RandomCIDGenerator(8)))
+}
+
+func TestPionE2ESimpleClientHook(t *testing.T) {
+	testPionE2ESimpleClientHook(t, serverPion, clientPion)
 }
