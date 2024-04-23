@@ -24,7 +24,6 @@ import (
 
 	"github.com/pion/dtls/v2"
 	"github.com/pion/dtls/v2/pkg/crypto/selfsign"
-	"github.com/pion/dtls/v2/pkg/mimicry"
 	"github.com/pion/transport/v3/test"
 )
 
