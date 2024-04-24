@@ -596,7 +596,8 @@ func testPionE2ESimpleClientHook(t *testing.T, server, client func(*comm), opts 
 					Random:         r,
 					SessionID:      s,
 					Cookie:         c,
-					CipherSuiteIDs: []uint16{uint16(dtls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256)}}
+					CipherSuiteIDs: []uint16{uint16(dtls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256)},
+				}
 			},
 			InsecureSkipVerify: true,
 		}
