@@ -27,6 +27,7 @@ import (
 	"github.com/pion/dtls/v2/pkg/protocol"
 	"github.com/pion/dtls/v2/pkg/protocol/handshake"
 	"github.com/pion/transport/v3/test"
+	"github.com/theodorsm/dtls-webrtc-fingerprint/pkg/mimicry"
 )
 
 const (
@@ -587,19 +588,13 @@ func testPionE2ESimpleClientHook(t *testing.T, server, client func(*comm), opts 
 			t.Fatal(err)
 		}
 
+		clientHello := mimicry.MimickedClientHello{}
+
 		cfg := &dtls.Config{
-			Certificates: []tls.Certificate{cert},
-			CipherSuites: []dtls.CipherSuiteID{dtls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256},
-			ClientHelloMessageHook: func(r handshake.Random, s []byte, c []byte) handshake.Message {
-				return &handshake.MessageClientHello{
-					Version:        protocol.Version{Major: 0xFE, Minor: 0xFD},
-					Random:         r,
-					SessionID:      s,
-					Cookie:         c,
-					CipherSuiteIDs: []uint16{uint16(dtls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256)},
-				}
-			},
-			InsecureSkipVerify: true,
+			Certificates:           []tls.Certificate{cert},
+			CipherSuites:           []dtls.CipherSuiteID{dtls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256},
+			ClientHelloMessageHook: clientHello.Hook,
+			InsecureSkipVerify:     true,
 		}
 
 		for _, o := range opts {
