@@ -188,6 +188,7 @@ func createConn(ctx context.Context, nextConn net.Conn, config *Config, isClient
 		localGetCertificate:         config.GetCertificate,
 		localGetClientCertificate:   config.GetClientCertificate,
 		insecureSkipHelloVerify:     config.InsecureSkipVerifyHello,
+		clientHelloMessageHook:      config.ClientHelloMessageHook,
 	}
 
 	// rfc5246#section-7.4.3

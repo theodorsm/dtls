@@ -118,6 +118,21 @@ func flight1Generate(c flightConn, state *State, _ *handshakeCache, cfg *handsha
 		}
 	}
 
+	if cfg.clientHelloMessageHook != nil {
+		return []*packet{
+			{
+				record: &recordlayer.RecordLayer{
+					Header: recordlayer.Header{
+						Version: protocol.Version1_2,
+					},
+					Content: &handshake.Handshake{
+						Message: cfg.clientHelloMessageHook(state.localRandom, state.SessionID, state.cookie),
+					},
+				},
+			},
+		}, nil, nil
+	}
+
 	return []*packet{
 		{
 			record: &recordlayer.RecordLayer{

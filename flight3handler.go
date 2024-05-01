@@ -268,6 +268,21 @@ func flight3Generate(_ flightConn, state *State, _ *handshakeCache, cfg *handsha
 		extensions = append(extensions, &extension.ALPN{ProtocolNameList: cfg.supportedProtocols})
 	}
 
+	if cfg.clientHelloMessageHook != nil {
+		return []*packet{
+			{
+				record: &recordlayer.RecordLayer{
+					Header: recordlayer.Header{
+						Version: protocol.Version1_2,
+					},
+					Content: &handshake.Handshake{
+						Message: cfg.clientHelloMessageHook(state.localRandom, state.SessionID, state.cookie),
+					},
+				},
+			},
+		}, nil, nil
+	}
+
 	return []*packet{
 		{
 			record: &recordlayer.RecordLayer{

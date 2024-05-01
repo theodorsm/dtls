@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/pion/dtls/v2/pkg/crypto/elliptic"
+	"github.com/pion/dtls/v2/pkg/protocol/handshake"
 	"github.com/pion/logging"
 )
 
@@ -176,6 +177,8 @@ type Config struct {
 	// skip hello verify phase and receive ServerHello after initial ClientHello.
 	// This have implication on DoS attack resistance.
 	InsecureSkipVerifyHello bool
+
+	ClientHelloMessageHook func(handshake.Random, []byte, []byte) handshake.Message
 }
 
 func defaultConnectContextMaker() (context.Context, func()) {
