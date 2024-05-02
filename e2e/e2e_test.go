@@ -35,9 +35,11 @@ const (
 	messageRetry  = 200 * time.Millisecond
 )
 
-var errServerTimeout = errors.New("waiting on serverReady err: timeout")
-var errHookCiphersFailed = errors.New("hook failed to modify cipherlist")
-var errHookAPLNFailed = errors.New("hook failed to modify APLN extension")
+var (
+	errServerTimeout     = errors.New("waiting on serverReady err: timeout")
+	errHookCiphersFailed = errors.New("hook failed to modify cipherlist")
+	errHookAPLNFailed    = errors.New("hook failed to modify APLN extension")
+)
 
 func randomPort(t testing.TB) int {
 	t.Helper()
