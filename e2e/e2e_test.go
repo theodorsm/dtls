@@ -24,7 +24,6 @@ import (
 
 	"github.com/pion/dtls/v2"
 	"github.com/pion/dtls/v2/pkg/crypto/selfsign"
-	"github.com/pion/dtls/v2/pkg/protocol"
 	"github.com/pion/dtls/v2/pkg/protocol/handshake"
 	"github.com/pion/transport/v3/test"
 )
@@ -587,26 +586,40 @@ func testPionE2ESimpleClientHook(t *testing.T, server, client func(*comm), opts 
 			t.Fatal(err)
 		}
 
-		cfg := &dtls.Config{
+		modifiedCipher := dtls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
+		supportedList := []dtls.CipherSuiteID{
+			dtls.TLS_ECDHE_ECDSA_WITH_AES_128_CCM,
+			modifiedCipher,
+		}
+
+		ccfg := &dtls.Config{
 			Certificates: []tls.Certificate{cert},
-			CipherSuites: []dtls.CipherSuiteID{dtls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256},
-			ClientHelloMessageHook: func(r handshake.Random, s []byte, c []byte) handshake.Message {
-				return &handshake.MessageClientHello{
-					Version:        protocol.Version{Major: 0xFE, Minor: 0xFD},
-					Random:         r,
-					SessionID:      s,
-					Cookie:         c,
-					CipherSuiteIDs: []uint16{uint16(dtls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256)},
+			VerifyConnection: func(s *dtls.State) error {
+				if s.CipherSuiteID != modifiedCipher {
+					return errors.New("hook failed to modify cipherlist")
 				}
+				return nil
+			},
+			CipherSuites: supportedList,
+			ClientHelloMessageHook: func(ch handshake.MessageClientHello) handshake.Message {
+				ch.CipherSuiteIDs = []uint16{uint16(modifiedCipher)}
+				return &ch
 			},
 			InsecureSkipVerify: true,
 		}
 
+		scfg := &dtls.Config{
+			Certificates:       []tls.Certificate{cert},
+			CipherSuites:       supportedList,
+			InsecureSkipVerify: true,
+		}
+
 		for _, o := range opts {
-			o(cfg)
+			o(ccfg)
+			o(scfg)
 		}
 		serverPort := randomPort(t)
-		comm := newComm(ctx, cfg, cfg, serverPort, server, client)
+		comm := newComm(ctx, ccfg, scfg, serverPort, server, client)
 		defer comm.cleanup(t)
 		comm.assert(t)
 	})
