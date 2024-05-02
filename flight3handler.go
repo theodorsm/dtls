@@ -287,6 +287,16 @@ func flight3Generate(_ flightConn, state *State, _ *handshakeCache, cfg *handsha
 		extensions = append(extensions, &extension.ConnectionID{CID: state.localConnectionID})
 	}
 
+	clientHello := &handshake.MessageClientHello{
+		Version:            protocol.Version1_2,
+		SessionID:          state.SessionID,
+		Cookie:             state.cookie,
+		Random:             state.localRandom,
+		CipherSuiteIDs:     cipherSuiteIDs(cfg.localCipherSuites),
+		CompressionMethods: defaultCompressionMethods(),
+		Extensions:         extensions,
+	}
+
 	if cfg.clientHelloMessageHook != nil {
 		return []*packet{
 			{
@@ -295,7 +305,7 @@ func flight3Generate(_ flightConn, state *State, _ *handshakeCache, cfg *handsha
 						Version: protocol.Version1_2,
 					},
 					Content: &handshake.Handshake{
-						Message: cfg.clientHelloMessageHook(state.localRandom, state.SessionID, state.cookie),
+						Message: cfg.clientHelloMessageHook(*clientHello),
 					},
 				},
 			},
@@ -309,15 +319,7 @@ func flight3Generate(_ flightConn, state *State, _ *handshakeCache, cfg *handsha
 					Version: protocol.Version1_2,
 				},
 				Content: &handshake.Handshake{
-					Message: &handshake.MessageClientHello{
-						Version:            protocol.Version1_2,
-						SessionID:          state.SessionID,
-						Cookie:             state.cookie,
-						Random:             state.localRandom,
-						CipherSuiteIDs:     cipherSuiteIDs(cfg.localCipherSuites),
-						CompressionMethods: defaultCompressionMethods(),
-						Extensions:         extensions,
-					},
+					Message: clientHello,
 				},
 			},
 		},

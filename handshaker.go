@@ -126,7 +126,7 @@ type handshakeConfig struct {
 
 	mu sync.Mutex
 
-	clientHelloMessageHook func(handshake.Random, []byte, []byte) handshake.Message // Random, SessionID, Cookie
+	clientHelloMessageHook func(handshake.MessageClientHello) handshake.Message
 }
 
 type flightConn interface {
