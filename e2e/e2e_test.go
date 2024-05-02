@@ -24,6 +24,7 @@ import (
 
 	"github.com/pion/dtls/v2"
 	"github.com/pion/dtls/v2/pkg/crypto/selfsign"
+	"github.com/pion/dtls/v2/pkg/protocol/extension"
 	"github.com/pion/dtls/v2/pkg/protocol/handshake"
 	"github.com/pion/transport/v3/test"
 )
@@ -36,6 +37,7 @@ const (
 
 var errServerTimeout = errors.New("waiting on serverReady err: timeout")
 var errHookCiphersFailed = errors.New("hook failed to modify cipherlist")
+var errHookAPLNFailed = errors.New("hook failed to modify APLN extension")
 
 func randomPort(t testing.TB) int {
 	t.Helper()
@@ -571,7 +573,7 @@ func testPionE2ESimpleRSAClientCert(t *testing.T, server, client func(*comm), op
 	comm.assert(t)
 }
 
-func testPionE2ESimpleClientHook(t *testing.T, server, client func(*comm), opts ...dtlsConfOpts) {
+func testPionE2ESimpleClientHelloHook(t *testing.T, server, client func(*comm), opts ...dtlsConfOpts) {
 	lim := test.TimeOut(time.Second * 30)
 	defer lim.Stop()
 
@@ -612,6 +614,61 @@ func testPionE2ESimpleClientHook(t *testing.T, server, client func(*comm), opts 
 		scfg := &dtls.Config{
 			Certificates:       []tls.Certificate{cert},
 			CipherSuites:       supportedList,
+			InsecureSkipVerify: true,
+		}
+
+		for _, o := range opts {
+			o(ccfg)
+			o(scfg)
+		}
+		serverPort := randomPort(t)
+		comm := newComm(ctx, ccfg, scfg, serverPort, server, client)
+		defer comm.cleanup(t)
+		comm.assert(t)
+	})
+}
+
+func testPionE2ESimpleServerHelloHook(t *testing.T, server, client func(*comm), opts ...dtlsConfOpts) {
+	lim := test.TimeOut(time.Second * 30)
+	defer lim.Stop()
+
+	report := test.CheckRoutines(t)
+	defer report()
+
+	t.Run("ServerHello hook", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+
+		cert, err := selfsign.GenerateSelfSignedWithDNS("localhost")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		supportedList := []dtls.CipherSuiteID{dtls.TLS_ECDHE_ECDSA_WITH_AES_128_CCM}
+
+		apln := "APLN"
+
+		ccfg := &dtls.Config{
+			Certificates: []tls.Certificate{cert},
+			VerifyConnection: func(s *dtls.State) error {
+				if s.NegotiatedProtocol != apln {
+					return errHookAPLNFailed
+				}
+				return nil
+			},
+			CipherSuites:       supportedList,
+			InsecureSkipVerify: true,
+		}
+
+		scfg := &dtls.Config{
+			Certificates: []tls.Certificate{cert},
+			CipherSuites: supportedList,
+			ServerHelloMessageHook: func(sh handshake.MessageServerHello) handshake.Message {
+				sh.Extensions = append(sh.Extensions, &extension.ALPN{
+					ProtocolNameList: []string{apln},
+				})
+				return &sh
+			},
 			InsecureSkipVerify: true,
 		}
 
@@ -682,6 +739,10 @@ func TestPionE2ESimpleRSAClientCertCID(t *testing.T) {
 	testPionE2ESimpleRSAClientCert(t, serverPion, clientPion, withConnectionIDGenerator(dtls.RandomCIDGenerator(8)))
 }
 
-func TestPionE2ESimpleClientHook(t *testing.T) {
-	testPionE2ESimpleClientHook(t, serverPion, clientPion)
+func TestPionE2ESimpleClientHelloHook(t *testing.T) {
+	testPionE2ESimpleClientHelloHook(t, serverPion, clientPion)
+}
+
+func TestPionE2ESimpleServerHelloHook(t *testing.T) {
+	testPionE2ESimpleServerHelloHook(t, serverPion, clientPion)
 }

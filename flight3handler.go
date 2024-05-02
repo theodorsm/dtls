@@ -297,19 +297,12 @@ func flight3Generate(_ flightConn, state *State, _ *handshakeCache, cfg *handsha
 		Extensions:         extensions,
 	}
 
+	var content handshake.Handshake
+
 	if cfg.clientHelloMessageHook != nil {
-		return []*packet{
-			{
-				record: &recordlayer.RecordLayer{
-					Header: recordlayer.Header{
-						Version: protocol.Version1_2,
-					},
-					Content: &handshake.Handshake{
-						Message: cfg.clientHelloMessageHook(*clientHello),
-					},
-				},
-			},
-		}, nil, nil
+		content = handshake.Handshake{Message: cfg.clientHelloMessageHook(*clientHello)}
+	} else {
+		content = handshake.Handshake{Message: clientHello}
 	}
 
 	return []*packet{
@@ -318,9 +311,7 @@ func flight3Generate(_ flightConn, state *State, _ *handshakeCache, cfg *handsha
 				Header: recordlayer.Header{
 					Version: protocol.Version1_2,
 				},
-				Content: &handshake.Handshake{
-					Message: clientHello,
-				},
+				Content: &content,
 			},
 		},
 	}, nil, nil
