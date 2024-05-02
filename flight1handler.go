@@ -118,19 +118,22 @@ func flight1Generate(c flightConn, state *State, _ *handshakeCache, cfg *handsha
 		}
 	}
 
+	clientHello := &handshake.MessageClientHello{
+		Version:            protocol.Version1_2,
+		SessionID:          state.SessionID,
+		Cookie:             state.cookie,
+		Random:             state.localRandom,
+		CipherSuiteIDs:     cipherSuiteIDs(cfg.localCipherSuites),
+		CompressionMethods: defaultCompressionMethods(),
+		Extensions:         extensions,
+	}
+
+	var content handshake.Handshake
+
 	if cfg.clientHelloMessageHook != nil {
-		return []*packet{
-			{
-				record: &recordlayer.RecordLayer{
-					Header: recordlayer.Header{
-						Version: protocol.Version1_2,
-					},
-					Content: &handshake.Handshake{
-						Message: cfg.clientHelloMessageHook(state.localRandom, state.SessionID, state.cookie),
-					},
-				},
-			},
-		}, nil, nil
+		content = handshake.Handshake{Message: cfg.clientHelloMessageHook(*clientHello)}
+	} else {
+		content = handshake.Handshake{Message: clientHello}
 	}
 
 	return []*packet{
@@ -139,17 +142,7 @@ func flight1Generate(c flightConn, state *State, _ *handshakeCache, cfg *handsha
 				Header: recordlayer.Header{
 					Version: protocol.Version1_2,
 				},
-				Content: &handshake.Handshake{
-					Message: &handshake.MessageClientHello{
-						Version:            protocol.Version1_2,
-						SessionID:          state.SessionID,
-						Cookie:             state.cookie,
-						Random:             state.localRandom,
-						CipherSuiteIDs:     cipherSuiteIDs(cfg.localCipherSuites),
-						CompressionMethods: defaultCompressionMethods(),
-						Extensions:         extensions,
-					},
-				},
+				Content: &content,
 			},
 		},
 	}, nil, nil

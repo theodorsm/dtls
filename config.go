@@ -178,7 +178,7 @@ type Config struct {
 	// This have implication on DoS attack resistance.
 	InsecureSkipVerifyHello bool
 
-	ClientHelloMessageHook func(handshake.Random, []byte, []byte) handshake.Message
+	ClientHelloMessageHook func(handshake.MessageClientHello) handshake.Message
 }
 
 func defaultConnectContextMaker() (context.Context, func()) {
