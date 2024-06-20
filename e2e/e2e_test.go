@@ -24,6 +24,7 @@ import (
 
 	"github.com/pion/dtls/v2"
 	"github.com/pion/dtls/v2/pkg/crypto/selfsign"
+	"github.com/pion/dtls/v2/pkg/protocol/handshake"
 	"github.com/pion/transport/v2/test"
 )
 
@@ -33,7 +34,10 @@ const (
 	messageRetry  = 200 * time.Millisecond
 )
 
-var errServerTimeout = errors.New("waiting on serverReady err: timeout")
+var (
+	errServerTimeout     = errors.New("waiting on serverReady err: timeout")
+	errHookCiphersFailed = errors.New("hook failed to modify cipherlist")
+)
 
 func randomPort(t testing.TB) int {
 	t.Helper()
@@ -496,6 +500,57 @@ func testPionE2ESimpleRSAClientCert(t *testing.T, server, client func(*comm)) {
 	comm.assert(t)
 }
 
+func testPionE2ESimpleClientHelloHook(t *testing.T, server, client func(*comm)) {
+	lim := test.TimeOut(time.Second * 30)
+	defer lim.Stop()
+
+	report := test.CheckRoutines(t)
+	defer report()
+
+	t.Run("ClientHello hook", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+
+		cert, err := selfsign.GenerateSelfSignedWithDNS("localhost")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		modified := dtls.TLS_ECDHE_ECDSA_WITH_AES_128_CCM
+
+		supportedList := []dtls.CipherSuiteID{
+			dtls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+			modified,
+		}
+
+		ccfg := &dtls.Config{
+			Certificates: []tls.Certificate{cert},
+			CipherSuites: supportedList,
+			VerifyConnection: func(s *dtls.State) error {
+				if s.CipherSuiteID != modified {
+					return errHookCiphersFailed
+				}
+				return nil
+			},
+			ClientHelloMessageHook: func(ch handshake.MessageClientHello) handshake.Message {
+				ch.CipherSuiteIDs = []uint16{uint16(modified)}
+				return &ch
+			},
+			InsecureSkipVerify: true,
+		}
+
+		scfg := &dtls.Config{
+			Certificates:       []tls.Certificate{cert},
+			CipherSuites:       supportedList,
+			InsecureSkipVerify: true,
+		}
+
+		serverPort := randomPort(t)
+		comm := newComm(ctx, ccfg, scfg, serverPort, server, client)
+		comm.assert(t)
+	})
+}
+
 func TestPionE2ESimple(t *testing.T) {
 	testPionE2ESimple(t, serverPion, clientPion)
 }
@@ -522,4 +577,8 @@ func TestPionE2ESimpleECDSAClientCert(t *testing.T) {
 
 func TestPionE2ESimpleRSAClientCert(t *testing.T) {
 	testPionE2ESimpleRSAClientCert(t, serverPion, clientPion)
+}
+
+func TestPionE2ESimpleClientHelloHook(t *testing.T) {
+	testPionE2ESimpleClientHelloHook(t, serverPion, clientPion)
 }
