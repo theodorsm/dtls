@@ -8,9 +8,9 @@ import (
 	"encoding/gob"
 	"sync/atomic"
 
-	"github.com/pion/dtls/v2/pkg/crypto/elliptic"
-	"github.com/pion/dtls/v2/pkg/crypto/prf"
-	"github.com/pion/dtls/v2/pkg/protocol/handshake"
+	"github.com/theodorsm/dtls/v2/pkg/crypto/elliptic"
+	"github.com/theodorsm/dtls/v2/pkg/crypto/prf"
+	"github.com/theodorsm/dtls/v2/pkg/protocol/handshake"
 	"github.com/pion/transport/v2/replaydetector"
 )
 
@@ -21,6 +21,7 @@ type State struct {
 	localRandom, remoteRandom handshake.Random
 	masterSecret              []byte
 	cipherSuite               CipherSuite // nil if a cipherSuite hasn't been chosen
+	CipherSuiteID             CipherSuiteID
 
 	srtpProtectionProfile SRTPProtectionProfile // Negotiated SRTPProtectionProfile
 	PeerCertificates      [][]byte
@@ -120,6 +121,7 @@ func (s *State) deserialize(serialized serializedState) {
 	s.masterSecret = serialized.MasterSecret
 
 	// Set cipher suite
+	s.CipherSuiteID = CipherSuiteID(serialized.CipherSuiteID)
 	s.cipherSuite = cipherSuiteForID(CipherSuiteID(serialized.CipherSuiteID), nil)
 
 	atomic.StoreUint64(&s.localSequenceNumber[epoch], serialized.SequenceNumber)

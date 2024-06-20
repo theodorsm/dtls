@@ -6,12 +6,12 @@ package dtls
 import (
 	"context"
 
-	"github.com/pion/dtls/v2/pkg/crypto/elliptic"
-	"github.com/pion/dtls/v2/pkg/protocol"
-	"github.com/pion/dtls/v2/pkg/protocol/alert"
-	"github.com/pion/dtls/v2/pkg/protocol/extension"
-	"github.com/pion/dtls/v2/pkg/protocol/handshake"
-	"github.com/pion/dtls/v2/pkg/protocol/recordlayer"
+	"github.com/theodorsm/dtls/v2/pkg/crypto/elliptic"
+	"github.com/theodorsm/dtls/v2/pkg/protocol"
+	"github.com/theodorsm/dtls/v2/pkg/protocol/alert"
+	"github.com/theodorsm/dtls/v2/pkg/protocol/extension"
+	"github.com/theodorsm/dtls/v2/pkg/protocol/handshake"
+	"github.com/theodorsm/dtls/v2/pkg/protocol/recordlayer"
 )
 
 func flight1Parse(ctx context.Context, c flightConn, state *State, cache *handshakeCache, cfg *handshakeConfig) (flightVal, *alert.Alert, error) {
@@ -118,23 +118,31 @@ func flight1Generate(c flightConn, state *State, _ *handshakeCache, cfg *handsha
 		}
 	}
 
+	clientHello := &handshake.MessageClientHello{
+		Version:            protocol.Version1_2,
+		SessionID:          state.SessionID,
+		Cookie:             state.cookie,
+		Random:             state.localRandom,
+		CipherSuiteIDs:     cipherSuiteIDs(cfg.localCipherSuites),
+		CompressionMethods: defaultCompressionMethods(),
+		Extensions:         extensions,
+	}
+
+	var content handshake.Handshake
+
+	if cfg.clientHelloMessageHook != nil {
+		content = handshake.Handshake{Message: cfg.clientHelloMessageHook(*clientHello)}
+	} else {
+		content = handshake.Handshake{Message: clientHello}
+	}
+
 	return []*packet{
 		{
 			record: &recordlayer.RecordLayer{
 				Header: recordlayer.Header{
 					Version: protocol.Version1_2,
 				},
-				Content: &handshake.Handshake{
-					Message: &handshake.MessageClientHello{
-						Version:            protocol.Version1_2,
-						SessionID:          state.SessionID,
-						Cookie:             state.cookie,
-						Random:             state.localRandom,
-						CipherSuiteIDs:     cipherSuiteIDs(cfg.localCipherSuites),
-						CompressionMethods: defaultCompressionMethods(),
-						Extensions:         extensions,
-					},
-				},
+				Content: &content,
 			},
 		},
 	}, nil, nil

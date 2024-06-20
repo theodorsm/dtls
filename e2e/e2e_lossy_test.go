@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pion/dtls/v2"
-	"github.com/pion/dtls/v2/pkg/crypto/selfsign"
+	"github.com/theodorsm/dtls/v2"
+	"github.com/theodorsm/dtls/v2/pkg/crypto/selfsign"
 	transportTest "github.com/pion/transport/v2/test"
 )
 

@@ -1,4 +1,4 @@
-module github.com/pion/dtls/v2
+module github.com/theodorsm/dtls/v2
 
 require (
 	github.com/pion/logging v0.2.2
@@ -8,3 +8,6 @@ require (
 )
 
 go 1.13
+
+// Typo in module name in imports
+retract v2.3.0

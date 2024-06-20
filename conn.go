@@ -13,13 +13,13 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/pion/dtls/v2/internal/closer"
-	"github.com/pion/dtls/v2/pkg/crypto/elliptic"
-	"github.com/pion/dtls/v2/pkg/crypto/signaturehash"
-	"github.com/pion/dtls/v2/pkg/protocol"
-	"github.com/pion/dtls/v2/pkg/protocol/alert"
-	"github.com/pion/dtls/v2/pkg/protocol/handshake"
-	"github.com/pion/dtls/v2/pkg/protocol/recordlayer"
+	"github.com/theodorsm/dtls/v2/internal/closer"
+	"github.com/theodorsm/dtls/v2/pkg/crypto/elliptic"
+	"github.com/theodorsm/dtls/v2/pkg/crypto/signaturehash"
+	"github.com/theodorsm/dtls/v2/pkg/protocol"
+	"github.com/theodorsm/dtls/v2/pkg/protocol/alert"
+	"github.com/theodorsm/dtls/v2/pkg/protocol/handshake"
+	"github.com/theodorsm/dtls/v2/pkg/protocol/recordlayer"
 	"github.com/pion/logging"
 	"github.com/pion/transport/v2/connctx"
 	"github.com/pion/transport/v2/deadline"
@@ -188,6 +188,7 @@ func createConn(ctx context.Context, nextConn net.Conn, config *Config, isClient
 		localGetCertificate:         config.GetCertificate,
 		localGetClientCertificate:   config.GetClientCertificate,
 		insecureSkipHelloVerify:     config.InsecureSkipVerifyHello,
+		clientHelloMessageHook:      config.ClientHelloMessageHook,
 	}
 
 	// rfc5246#section-7.4.3

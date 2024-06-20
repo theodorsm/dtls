@@ -12,10 +12,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pion/dtls/v2/pkg/crypto/elliptic"
-	"github.com/pion/dtls/v2/pkg/crypto/signaturehash"
-	"github.com/pion/dtls/v2/pkg/protocol/alert"
-	"github.com/pion/dtls/v2/pkg/protocol/handshake"
+	"github.com/theodorsm/dtls/v2/pkg/crypto/elliptic"
+	"github.com/theodorsm/dtls/v2/pkg/crypto/signaturehash"
+	"github.com/theodorsm/dtls/v2/pkg/protocol/alert"
+	"github.com/theodorsm/dtls/v2/pkg/protocol/handshake"
 	"github.com/pion/logging"
 )
 
@@ -113,6 +113,7 @@ type handshakeConfig struct {
 	customCipherSuites          func() []CipherSuite
 	ellipticCurves              []elliptic.Curve
 	insecureSkipHelloVerify     bool
+	clientHelloMessageHook      func(handshake.MessageClientHello) handshake.Message
 
 	onFlightState func(flightVal, handshakeState)
 	log           logging.LeveledLogger
