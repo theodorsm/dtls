@@ -12,11 +12,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pion/dtls/v2/pkg/crypto/selfsign"
-	"github.com/pion/dtls/v2/pkg/crypto/signaturehash"
-	"github.com/pion/dtls/v2/pkg/protocol/alert"
-	"github.com/pion/dtls/v2/pkg/protocol/handshake"
-	"github.com/pion/dtls/v2/pkg/protocol/recordlayer"
+	"github.com/theodorsm/dlts/v2/pkg/crypto/selfsign"
+	"github.com/theodorsm/dlts/v2/pkg/crypto/signaturehash"
+	"github.com/theodorsm/dlts/v2/pkg/protocol/alert"
+	"github.com/theodorsm/dlts/v2/pkg/protocol/handshake"
+	"github.com/theodorsm/dlts/v2/pkg/protocol/recordlayer"
 	"github.com/pion/logging"
 	"github.com/pion/transport/v2/test"
 )

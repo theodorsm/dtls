@@ -9,10 +9,10 @@ import (
 	"hash"
 	"sync/atomic"
 
-	"github.com/pion/dtls/v2/pkg/crypto/ciphersuite"
-	"github.com/pion/dtls/v2/pkg/crypto/clientcertificate"
-	"github.com/pion/dtls/v2/pkg/crypto/prf"
-	"github.com/pion/dtls/v2/pkg/protocol/recordlayer"
+	"github.com/theodorsm/dlts/v2/pkg/crypto/ciphersuite"
+	"github.com/theodorsm/dlts/v2/pkg/crypto/clientcertificate"
+	"github.com/theodorsm/dlts/v2/pkg/crypto/prf"
+	"github.com/theodorsm/dlts/v2/pkg/protocol/recordlayer"
 )
 
 // TLSEcdhePskWithAes128CbcSha256 implements the TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256 CipherSuite

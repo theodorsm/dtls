@@ -13,8 +13,8 @@ import (
 	"io"
 	"time"
 
-	"github.com/pion/dtls/v2/pkg/crypto/elliptic"
-	"github.com/pion/dtls/v2/pkg/protocol/handshake"
+	"github.com/theodorsm/dlts/v2/pkg/crypto/elliptic"
+	"github.com/theodorsm/dlts/v2/pkg/protocol/handshake"
 	"github.com/pion/logging"
 )
 

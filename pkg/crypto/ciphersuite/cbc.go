@@ -11,10 +11,10 @@ import ( //nolint:gci
 	"encoding/binary"
 	"hash"
 
-	"github.com/pion/dtls/v2/internal/util"
-	"github.com/pion/dtls/v2/pkg/crypto/prf"
-	"github.com/pion/dtls/v2/pkg/protocol"
-	"github.com/pion/dtls/v2/pkg/protocol/recordlayer"
+	"github.com/theodorsm/dlts/v2/internal/util"
+	"github.com/theodorsm/dlts/v2/pkg/crypto/prf"
+	"github.com/theodorsm/dlts/v2/pkg/protocol"
+	"github.com/theodorsm/dlts/v2/pkg/protocol/recordlayer"
 )
 
 // block ciphers using cipher block chaining.
