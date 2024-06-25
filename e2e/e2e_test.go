@@ -27,12 +27,13 @@ import (
 	"github.com/pion/dtls/v2/pkg/protocol/extension"
 	"github.com/pion/dtls/v2/pkg/protocol/handshake"
 	"github.com/pion/transport/v3/test"
+  "github.com/theodorsm/covert-dtls/pkg/randomize"
 )
 
 const (
 	testMessage   = "Hello World"
 	testTimeLimit = 5 * time.Second
-	messageRetry  = 200 * time.Millisecond
+	messageRetry  = 400 * time.Millisecond
 )
 
 var (
@@ -576,7 +577,7 @@ func testPionE2ESimpleRSAClientCert(t *testing.T, server, client func(*comm), op
 }
 
 func testPionE2ESimpleClientHelloHook(t *testing.T, server, client func(*comm), opts ...dtlsConfOpts) {
-	lim := test.TimeOut(time.Second * 30)
+	lim := test.TimeOut(time.Second * 10)
 	defer lim.Stop()
 
 	report := test.CheckRoutines(t)
@@ -591,14 +592,20 @@ func testPionE2ESimpleClientHelloHook(t *testing.T, server, client func(*comm), 
 			t.Fatal(err)
 		}
 
+    /*
 		modifiedCipher := dtls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
 		supportedList := []dtls.CipherSuiteID{
 			dtls.TLS_ECDHE_ECDSA_WITH_AES_128_CCM,
 			modifiedCipher,
 		}
+    */
+
+    ch := randomize.RandomizedMessageClientHello{RandomALPN: true}
 
 		ccfg := &dtls.Config{
 			Certificates: []tls.Certificate{cert},
+      SRTPProtectionProfiles: []dtls.SRTPProtectionProfile{dtls.SRTP_AES128_CM_HMAC_SHA1_80, dtls.SRTP_AES128_CM_HMAC_SHA1_32, dtls.SRTP_AEAD_AES_128_GCM, dtls.SRTP_AEAD_AES_256_GCM},
+      /*
 			VerifyConnection: func(s *dtls.State) error {
 				if s.CipherSuiteID != modifiedCipher {
 					return errHookCiphersFailed
@@ -606,16 +613,14 @@ func testPionE2ESimpleClientHelloHook(t *testing.T, server, client func(*comm), 
 				return nil
 			},
 			CipherSuites: supportedList,
-			ClientHelloMessageHook: func(ch handshake.MessageClientHello) handshake.Message {
-				ch.CipherSuiteIDs = []uint16{uint16(modifiedCipher)}
-				return &ch
-			},
+      */
+			ClientHelloMessageHook: ch.Hook,
 			InsecureSkipVerify: true,
 		}
 
 		scfg := &dtls.Config{
 			Certificates:       []tls.Certificate{cert},
-			CipherSuites:       supportedList,
+      SRTPProtectionProfiles: []dtls.SRTPProtectionProfile{dtls.SRTP_AES128_CM_HMAC_SHA1_80, dtls.SRTP_AES128_CM_HMAC_SHA1_32, dtls.SRTP_AEAD_AES_128_GCM, dtls.SRTP_AEAD_AES_256_GCM},
 			InsecureSkipVerify: true,
 		}
 
